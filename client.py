@@ -1,22 +1,29 @@
+#!/bin/python2
+
 import socket
+import ssl
 import time
 import os
 
-s = socket.socket()			 
+s = socket.socket()	
+ssl_sock = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1, 
+		ca_certs="./certs/server.crt", cert_reqs=ssl.CERT_REQUIRED )
+
 host = socket.gethostname()	 
 port = 10000
 
-s.connect((host, port))
+ssl_sock.connect((host, port))
+print repr(ssl_sock.getpeername())
 
 d_start = time.time()
 with open('received_file', 'wb') as f:
     while True:
-        data = s.recv(1024)
+        data = ssl_sock.recv(2048)
         if not data:
-            break
+           	break
         f.write(data)
 f.close()
-s.close()
+ssl_sock.close()
 d_end = time.time() - d_start
 
 size = os.path.getsize("received_file")
